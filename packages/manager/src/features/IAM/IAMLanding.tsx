@@ -16,7 +16,7 @@ const Users = React.lazy(() =>
 );
 
 const Roles = React.lazy(() =>
-  import('./Roles/Roles').then((module) => ({
+  import('./Roles/RolesTable/Roles').then((module) => ({
     default: module.RolesLanding,
   }))
 );

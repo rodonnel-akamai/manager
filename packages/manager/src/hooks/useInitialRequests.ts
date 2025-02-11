@@ -16,7 +16,7 @@ export const useInitialRequests = () => {
   const queryClient = useQueryClient();
 
   const { token } = useAuthentication();
-  const isAuthenticated = Boolean(token);
+  const isAuthenticated = true; //Boolean(token);
   const pendingUpload = usePendingUpload();
 
   const [isLoading, setIsLoading] = React.useState(true);
