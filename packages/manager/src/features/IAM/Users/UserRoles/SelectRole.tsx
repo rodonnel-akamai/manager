@@ -35,11 +35,13 @@ export const SelectRole = (
       <Box
         display={'flex'}
         flexDirection={'column'}
-        sx={(theme) => ({
-          flex: '5 1 auto',
-        })}>
+        sx={(theme) => ({ flex: '5 1 auto' })}>
         {index !== 0 && (
-          <Divider sx={{ marginBottom: '12px' }}></Divider>
+          <Divider
+            sx={(theme) => ({
+              marginBottom: theme.spacing(1.5)
+            })}>
+          </Divider>
         )}
         <Autocomplete
           renderOption={(props, option) => (
@@ -52,18 +54,18 @@ export const SelectRole = (
           value={selectedOption}
           onChange={(_, opt) => onChange(index, opt)}
           placeholder="Select a Role"
-          textFieldProps={{ hideLabel: true, noMarginTop: true }}
+          textFieldProps={{ hideLabel: true }}
         />
         {selectedRole && (
           <AssignedPermissionsPanel key={selectedRole.name} role={selectedRole}/>
         )}
       </Box>
-      <Box sx={{
+      <Box sx={(theme) => ({
         flex: '0 1 auto',
         verticalAlign: 'top',
-        marginTop: index !== 0 ? '16px' : '-4px'
-      }} >
-        <Button onClick={() => onRemove(index)}>
+        marginTop: index === 0 ? theme.spacing(-0.5) : theme.spacing(2)
+      })}>
+        <Button disabled={index === 0} onClick={() => onRemove(index)}>
           <Close/>
         </Button>
       </Box>

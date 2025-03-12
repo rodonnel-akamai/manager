@@ -68,7 +68,7 @@ export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
       <Typography sx={{ marginBottom: 2.5 }}>
         Select a role you want to assign to a user. Some roles require selecting
         resources they should apply to. Configure the first role and continue
-        continue adding roles or save the assignment.
+        adding roles or save the assignment.
         <Link to=""> Learn more about roles and permissions.</Link>
       </Typography>
 
@@ -76,7 +76,7 @@ export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
         selectedRoles.map((role, index) => (
           <SelectRole
             index={index}
-            key={role ? role.label : undefined}
+            key={role ? role.label : `${index}`}
             onChange={handleChangeRole}
             onRemove={handleRemoveRole}
             options={allRoles}
@@ -87,7 +87,7 @@ export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
 
       {/* If all roles are filled, allow them to add another */}
       {selectedRoles.every((role) => role !== null) && (
-        <StyledLinkButtonBox sx={{ marginTop: '12px' }}>
+        <StyledLinkButtonBox sx={(theme) => ({ marginTop: theme.spacing(1.5) })}>
           <LinkButton onClick={addRole}>Add another role</LinkButton>
         </StyledLinkButtonBox>
       )}
