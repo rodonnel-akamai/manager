@@ -1,4 +1,4 @@
-import { Autocomplete } from '@linode/ui';
+import { Autocomplete, Button } from '@linode/ui';
 import React from 'react';
 
 import { AssignedPermissionsPanel } from 'src/features/IAM/Shared/AssignedPermissionsPanel/AssignedPermissionsPanel';
@@ -6,16 +6,21 @@ import { getRoleByName } from 'src/features/IAM/Shared/utilities';
 
 import type { IamAccountPermissions } from '@linode/api-v4';
 import type { RolesType } from 'src/features/IAM/Shared/utilities';
+import Close from '@mui/icons-material/Close';
+import Box from '@mui/material/Box';
+import { Divider } from '@mui/material';
 
 interface Props {
   options: RolesType[];
+  index: number;
+  selectedOption: RolesType | null;
   permissions: IamAccountPermissions;
+  onChange: (idx: number, role: RolesType | null) => void;
+  onRemove: (idx: number) => void;
 }
 
-export const SelectRole = ({ options, permissions }: Props) => {
-  const [selectedOption, setSelectedOption] = React.useState<RolesType | null>(
-    null
-  );
+export const SelectRole = (
+  { options, index, selectedOption, permissions, onChange, onRemove }: Props) => {
 
   // Get the selected role based on the `selectedOptions`
   const selectedRole = React.useMemo(() => {
@@ -25,27 +30,43 @@ export const SelectRole = ({ options, permissions }: Props) => {
     return getRoleByName(permissions, selectedOption.value);
   }, [selectedOption, permissions]);
 
-  // TODO - add a link 'Learn more" - UIE-8534
   return (
-    <>
-      <br />
-      <Autocomplete
-        renderOption={(props, option) => (
-          <li {...props} key={option.label}>
-            {option.label}
-          </li>
+    <Box display={'flex'}>
+      <Box
+        display={'flex'}
+        flexDirection={'column'}
+        sx={(theme) => ({
+          flex: '5 1 auto',
+        })}>
+        {index !== 0 && (
+          <Divider sx={{ marginBottom: '12px' }}></Divider>
         )}
-        label="Assign New Roles"
-        onChange={(_, value) => setSelectedOption(value)}
-        options={options}
-        placeholder="Select a Role"
-        textFieldProps={{ hideLabel: true, noMarginTop: true }}
-      />
-      <br />
-      {selectedRole && (
-        <AssignedPermissionsPanel key={selectedRole.name} role={selectedRole} />
-      )}
-      <br />
-    </>
+        <Autocomplete
+          renderOption={(props, option) => (
+            <li {...props} key={option.label}>
+              {option.label}
+            </li>
+          )}
+          label="Assign New Roles"
+          options={options}
+          value={selectedOption}
+          onChange={(_, opt) => onChange(index, opt)}
+          placeholder="Select a Role"
+          textFieldProps={{ hideLabel: true, noMarginTop: true }}
+        />
+        {selectedRole && (
+          <AssignedPermissionsPanel key={selectedRole.name} role={selectedRole}/>
+        )}
+      </Box>
+      <Box sx={{
+        flex: '0 1 auto',
+        verticalAlign: 'top',
+        marginTop: index !== 0 ? '16px' : '-4px'
+      }} >
+        <Button onClick={() => onRemove(index)}>
+          <Close/>
+        </Button>
+      </Box>
+    </Box>
   );
 };

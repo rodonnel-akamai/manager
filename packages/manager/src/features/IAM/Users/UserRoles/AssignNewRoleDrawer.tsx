@@ -1,6 +1,5 @@
 import { Typography } from '@linode/ui';
-import React from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { Drawer } from 'src/components/Drawer';
@@ -20,21 +19,7 @@ interface Props {
 }
 
 export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
-  const {
-    control,
-    formState: { isDirty, isSubmitting },
-    handleSubmit,
-    setError,
-  } = useForm({
-    defaultValues: {
-      selectedRoles: [],
-    },
-  });
-
-  const {
-    data: accountPermissions,
-    isLoading: accountPermissionsLoading
-  } = useAccountPermissions();
+  const { data: accountPermissions } = useAccountPermissions();
 
   const allRoles = React.useMemo(() => {
     if (!accountPermissions) {
@@ -43,77 +28,80 @@ export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
     return getAllRoles(accountPermissions);
   }, [accountPermissions]);
 
-  const onSubmit = async (data: {
-    selectedRoles: RolesType[];
-  }) => {
-    try {
-      // TODO - Need to submit data to the API
-      // eslint-disable-next-line no-console
-      console.log('they want these roles', data);
-      handleClose();
-    } catch (errors) {
-      for (const error of errors) {
-        setError(error?.field ?? 'root', { message: error.reason });
-      }
-    }
+  const [selectedRoles, setSelectedRoles] = useState<(RolesType | null)[]>([
+    null,
+  ]);
+
+  const handleChangeRole = (index: number, value: RolesType | null) => {
+    const updatedRoles = [...selectedRoles];
+    updatedRoles[index] = value;
+    setSelectedRoles(updatedRoles);
+  };
+
+  const addRole = () => setSelectedRoles([...selectedRoles, null]);
+
+  const handleRemoveRole = (index: number) => {
+    const updatedRoles = selectedRoles.filter((_, i) => i !== index);
+    setSelectedRoles(updatedRoles);
+  };
+
+  const removeAllRoles = () => setSelectedRoles([null]);
+
+  const handleSubmit = () => {
+    // TODO - make this really do something apart from console logging - UIE-8590
+    // eslint-disable-next-line no-console
+    console.log(
+      'Selected Roles:',
+      selectedRoles.filter((role) => role)
+    );
+    handleClose();
   };
 
   const handleClose = () => {
-    // eslint-disable-next-line no-console
-    console.log('wanting to close');
+    removeAllRoles();
     onClose();
-  };
-
-  const addNewRoleSelect = () => {
-    // TODO - make this real
-    // onChange([...selectedRoles, { }]);
-    // eslint-disable-next-line no-console
-    console.log('trying to add a new input');
   };
 
   // TODO - add a link 'Learn more" - UIE-8534
   return (
     <Drawer onClose={onClose} open={open} title="Assign New Roles">
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Typography sx={{ marginBottom: 2.5 }}>
-          Select a role you want to assign to a user. Some roles require
-          selecting resources they should apply to. Configure the first role
-          and continue continue adding roles or save the assignment.
-          <Link to=""> Learn more about roles and permissions.</Link>
-        </Typography>
+      <Typography sx={{ marginBottom: 2.5 }}>
+        Select a role you want to assign to a user. Some roles require selecting
+        resources they should apply to. Configure the first role and continue
+        continue adding roles or save the assignment.
+        <Link to=""> Learn more about roles and permissions.</Link>
+      </Typography>
 
-        {/* TODO - one of these per role */}
-
-        {!accountPermissionsLoading && !!accountPermissions && (
-          <Controller
-            render={({ field }) => (
-              <SelectRole options={allRoles} permissions={accountPermissions}></SelectRole>
-            )}
-            control={control}
-            name="selectedRoles"
+      {!!accountPermissions &&
+        selectedRoles.map((role, index) => (
+          <SelectRole
+            index={index}
+            key={role ? role.label : undefined}
+            onChange={handleChangeRole}
+            onRemove={handleRemoveRole}
+            options={allRoles}
+            permissions={accountPermissions}
+            selectedOption={selectedRoles[index]}
           />
-        )}
+        ))}
 
-
-        {/*  TODO - once one is added, put this link in here? */}
-
+      {/* If all roles are filled, allow them to add another */}
+      {selectedRoles.every((role) => role !== null) && (
         <StyledLinkButtonBox sx={{ marginTop: '12px' }}>
-          <LinkButton onClick={addNewRoleSelect}>Add another role</LinkButton>
+          <LinkButton onClick={addRole}>Add another role</LinkButton>
         </StyledLinkButtonBox>
+      )}
 
-        <ActionsPanel
-          primaryButtonProps={{
-            disabled: !isDirty,
-            label: 'Assign',
-            loading: isSubmitting,
-            type: 'submit',
-          }}
-          secondaryButtonProps={{
-            label: 'Cancel',
-            onClick: onClose,
-          }}
-        />
-      </form>
+      <ActionsPanel
+        primaryButtonProps={{
+          label: 'Assign',
+          onClick: handleSubmit,
+        }}
+        secondaryButtonProps={{
+          label: 'Cancel',
+          onClick: handleClose,
+        }}
+      />
     </Drawer>
   );
 };
