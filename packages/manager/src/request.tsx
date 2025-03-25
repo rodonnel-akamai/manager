@@ -124,7 +124,7 @@ export const isSuccessfulGETProfileResponse = (
 };
 
 export const setupInterceptors = (store: ApplicationStore) => {
-  baseRequest.interceptors.request.use((config) => {
+  baseRequest.interceptors.request.use((config: any) => {
     /** Will end up being "Admin 1234" or "Bearer 1234" */
     const token = ACCESS_TOKEN || (getAuthToken()?.token ?? '');
 

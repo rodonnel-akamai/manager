@@ -1,0 +1,97 @@
+import React, { useState } from 'react';
+import { IamAccess, IamAccountPermissions, PermissionType, Roles } from '@linode/api-v4';
+import { Box, Paper } from '@linode/ui';
+import { DebouncedSearchTextField } from 'src/components/DebouncedSearchTextField';
+import { getAPIFilterFromQuery } from '@linode/search';
+import { useAccountPermissions } from 'src/queries/iam/iam';
+import { RolesTable } from './RolesTable';
+// import { RolesTableCollapsible } from 'src/features/IAM/Roles/RolesTable/RolesTableCollapsible';
+// import { RolesTableSelectable } from 'src/features/IAM/Roles/RolesTable/RolesTableSelectable';
+
+export interface UiRole {
+  name: string;
+  type: string;
+  description: string;
+  permissions: IamAccountPermissions[];
+}
+
+export const RolesLanding = () => {
+  const [query, setQuery] = useState<string>();
+
+  const { error: searchError } = getAPIFilterFromQuery(query, {
+    searchableFieldsWithoutOperator: ['name', 'type', 'description'],
+  });
+
+  const { data: roles, error, isFetching, isLoading } = useAccountPermissions();
+
+  if (!!error || isLoading) {
+    // do something here?
+  }
+
+  const uiRoles = React.useMemo(() => {
+    if (!roles) {
+      return [];
+    }
+
+    const uiRoles: UiRole[] = [];
+    roles.account_access.forEach((iamAccess: IamAccess) => {
+      iamAccess.roles.forEach((r: Roles) => {
+        uiRoles.push({
+          name: snakeToCamel(r.name),
+          type: 'Account access',
+          description: r.description,
+          permissions: r.permissions,
+        });
+      });
+    });
+
+    roles.resource_access.forEach((iamAccess: IamAccess) => {
+      iamAccess.roles.forEach((r: Roles) => {
+        uiRoles.push({
+          name: snakeToCamel(r.name),
+          type: 'Entity access',
+          description: r.description,
+          permissions: r.permissions,
+        });
+      });
+    });
+
+    return uiRoles;
+  }, [roles]);
+
+  return (
+    <>
+      <Paper sx={(theme) => ({ marginTop: theme.spacing(2) })}>
+        <Box
+          sx={(theme) => ({
+            alignItems: 'center',
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: theme.spacing(2),
+          })}
+        >
+          <DebouncedSearchTextField
+            clearable
+            debounceTime={250}
+            errorText={searchError?.message}
+            hideLabel
+            isSearching={isFetching}
+            label="Filter"
+            onSearch={setQuery}
+            placeholder="Filter"
+            sx={{ width: 320 }}
+            value=""
+          />
+        </Box>
+
+        <RolesTable roles={uiRoles}></RolesTable>
+      </Paper>
+    </>
+  );
+};
+
+const snakeToCamel = (str: any) => str;
+// str.toLowerCase()
+//   .replace(/([_][a-z])/g, group =>
+//     group.toUpperCase().replace('_', '')
+// );
