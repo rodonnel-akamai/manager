@@ -1,7 +1,7 @@
 import { ActionsPanel, Drawer, Typography } from '@linode/ui';
 import { useTheme } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
@@ -9,26 +9,33 @@ import { Link } from 'src/components/Link';
 import { LinkButton } from 'src/components/LinkButton';
 import { NotFound } from 'src/components/NotFound';
 import { StyledLinkButtonBox } from 'src/components/SelectFirewallPanel/SelectFirewallPanel';
-import { AssignSingleRole } from 'src/features/IAM/Users/UserRoles/AssignSingleRole';
+import { AssignSingleRole } from 'src/features/IAM/Shared/AssignRolesDrawer/AssignSingleRole';
 import {
   useAccountPermissions,
   useAccountUserPermissions,
   useAccountUserPermissionsMutation,
 } from 'src/queries/iam/iam';
 
-import {
-  getAllRoles,
-  mergeAssignedRolesIntoExistingRoles,
-} from '../../Shared/utilities';
+import { getAllRoles, mergeAssignedRolesIntoExistingRoles, RolesType } from '../utilities';
 
-import type { AssignNewRoleFormValues } from '../../Shared/utilities';
+import type { AssignNewRoleFormValues } from '../utilities';
+import type { RoleView } from 'src/features/IAM/Shared/types';
 
 interface Props {
+  incomingRoles: RoleView[];
+  introText: string;
   onClose: () => void;
   open: boolean;
+  title: string;
 }
 
-export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
+export const AssignRolesDrawer = ({
+  onClose,
+  open,
+  incomingRoles,
+  title,
+  introText,
+}: Props) => {
   const theme = useTheme();
   const { username } = useParams<{ username: string }>();
 
@@ -36,24 +43,58 @@ export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
 
   const { data: existingRoles } = useAccountUserPermissions(username ?? '');
 
+  const isReadonlyRoles = incomingRoles?.length > 0;
+  const isReadonlyUser = !!username;
+
+  // console.log('isReadonlyRoles', isReadonlyRoles, incomingRoles);
+  // console.log('isReadonlyUser', isReadonlyUser);
+
+  const defaultRolesValues =
+    incomingRoles?.length > 0
+      ? incomingRoles.map((role) => ({
+          entities: null,
+          role: role?.name as unknown as RolesType || null,
+        }))
+      : [
+          {
+            entities: null,
+            role: null,
+          },
+        ];
   const form = useForm<AssignNewRoleFormValues>({
     defaultValues: {
-      roles: [
-        {
-          entities: null,
-          role: null,
-        },
-      ],
+      roles: defaultRolesValues,
     },
   });
 
+  // const form = useForm<AssignNewRoleFormValues>({
+  //   defaultValues: {
+  //     roles: [
+  //       {
+  //         entities: null,
+  //         role: null,
+  //       },
+  //     ],
+  //   },
+  // });
+
   const { control, handleSubmit, reset, watch } = form;
-  const { append, fields, remove } = useFieldArray({
+  const { append, fields, remove, update } = useFieldArray({
     control,
     name: 'roles',
   });
 
   const [areDetailsHidden, setAreDetailsHidden] = useState(false);
+
+  // If there are incoming roles, add them
+  useEffect(() => {
+    incomingRoles.forEach((role, idx) => {
+      update(idx, {
+        entities: null,
+        role: role.name as unknown as RolesType
+      });
+    });
+  }, [incomingRoles, update]);
 
   // to watch changes to this value since we're conditionally rendering "Add another role"
   const roles = watch('roles');
@@ -88,15 +129,13 @@ export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
       NotFoundComponent={NotFound}
       onClose={onClose}
       open={open}
-      title="Assign New Roles"
+      title={title}
     >
       {' '}
       <FormProvider {...form}>
         <form onSubmit={onSubmit}>
           <Typography sx={{ marginBottom: 2.5 }}>
-            Select a role you want to assign to a user. Some roles require
-            selecting resources they should apply to. Configure the first role
-            and continue adding roles or save the assignment.
+            {introText}
             <Link to=""> Learn more about roles and permissions.</Link>
           </Typography>
           <Grid
@@ -127,13 +166,15 @@ export const AssignNewRoleDrawer = ({ onClose, open }: Props) => {
                 index={index}
                 key={field.id}
                 onRemove={() => remove(index)}
-                options={allRoles}
+                options={isReadonlyRoles ? [] : allRoles}
                 permissions={accountPermissions}
               />
             ))}
 
           {/* If all roles are filled, allow them to add another */}
-          {roles.length > 0 && roles.every((field) => field.role) && (
+          {roles.length > 0 &&
+            roles.every((field) => field.role) &&
+            !isReadonlyRoles && (
             <StyledLinkButtonBox sx={{ marginTop: theme.tokens.spacing.S12 }}>
               <LinkButton onClick={() => append({ role: null })}>
                 Add another role

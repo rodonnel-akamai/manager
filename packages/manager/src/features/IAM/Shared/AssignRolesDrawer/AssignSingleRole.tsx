@@ -32,6 +32,8 @@ export const AssignSingleRole = ({
 
   const { control } = useFormContext<AssignNewRoleFormValues>();
 
+  const isRoleNameReadonly = options.length > 0;
+
   return (
     <Box display="flex">
       <Box display="flex" flexDirection="column" sx={{ flex: '5 1 auto' }}>
@@ -71,6 +73,7 @@ export const AssignSingleRole = ({
                     });
                   }}
                   role={getRoleByName(permissions, value.role?.value)!}
+                  showName={isRoleNameReadonly}
                   value={value.entities || []}
                 />
               )}

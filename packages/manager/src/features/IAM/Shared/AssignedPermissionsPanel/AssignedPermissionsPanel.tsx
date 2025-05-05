@@ -16,6 +16,7 @@ interface Props {
   mode?: DrawerModes;
   onChange?: (value: EntitiesOption[]) => void;
   role: ExtendedRole | ExtendedRoleView;
+  showName?: boolean;
   sx?: SxProps<Theme>;
   value?: EntitiesOption[];
 }
@@ -25,6 +26,7 @@ export const AssignedPermissionsPanel = ({
   mode,
   onChange,
   role,
+  showName = false,
   sx,
   value,
 }: Props) => {
@@ -48,7 +50,7 @@ export const AssignedPermissionsPanel = ({
           font: theme.tokens.alias.Typography.Label.Bold.S,
         })}
       >
-        Description
+        {showName ? role.name : 'Description'}
       </Typography>
       <Typography
         sx={{

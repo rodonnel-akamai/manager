@@ -17,7 +17,7 @@ import { useAccountUserPermissions } from 'src/queries/iam/iam';
 import { AssignedRolesTable } from '../../Shared/AssignedRolesTable/AssignedRolesTable';
 import { NO_ASSIGNED_ROLES_TEXT } from '../../Shared/constants';
 import { NoAssignedRoles } from '../../Shared/NoAssignedRoles/NoAssignedRoles';
-import { AssignNewRoleDrawer } from './AssignNewRoleDrawer';
+import { AssignRolesDrawer } from '../../Shared/AssignRolesDrawer/AssignRolesDrawer';
 
 export const UserRoles = () => {
   const { username } = useParams<{ username: string }>();
@@ -64,9 +64,14 @@ export const UserRoles = () => {
           )}
         </Stack>
       </Paper>
-      <AssignNewRoleDrawer
+      <AssignRolesDrawer
+        incomingRoles={[]}
+        introText={
+          'Select users you want to assign selected roles to. Some roles require selecting entities they should apply to.'
+        }
         onClose={() => setIsDrawerOpen(false)}
         open={isDrawerOpen}
+        title={'Assign New Roles'}
       />
     </>
   );
